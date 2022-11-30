@@ -1,0 +1,10 @@
+/target
+.env
+
+# vscode stuff
+*.code-workspace
+.vscode
+
+/public
+
+rcms.json
