@@ -32,9 +32,11 @@ Start the server
 
 The CMS should now be up and running at `http://localhost:8000`
 
-API
+## API
 
-The CMS exposes a RESTful API that allows you to manage the content of your site. The API documentation can be found at http://localhost:8000/api/docs.
+The CMS exposes a RESTful API that allows you to manage the content of your site. 
+
+The API documentation can be found at http://localhost:8000/api/docs.
 License
 
 This project is licensed under the gplv3 License. See LICENSE for more details.
