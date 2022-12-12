@@ -5,7 +5,7 @@ use diesel::{
     PgConnection,
 };
 
-use crate::utils::error::CustomHttpError;
+use crate::utils::error::HttpErrorCodes;
 
 use super::structs::LocalConfig;
 
@@ -74,6 +74,6 @@ pub fn init_pool(db_url: &str) -> Result<PGPool, PoolError> {
     Pool::builder().max_size(2).build(manager)
 }
 
-pub fn pool_handler(pool: web::Data<PGPool>) -> Result<PGPooledConnection, CustomHttpError> {
-    pool.get().or(Err(CustomHttpError::BadRequest))
+pub fn pool_handler(pool: web::Data<PGPool>) -> Result<PGPooledConnection, HttpErrorCodes> {
+    pool.get().or(Err(HttpErrorCodes::BadRequest))
 }

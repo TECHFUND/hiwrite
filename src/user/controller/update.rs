@@ -3,7 +3,7 @@ use crate::user::model::User;
 use crate::utils::auth::encrypt;
 use crate::utils::auth::encrypt_password;
 use crate::utils::auth::Claims;
-use crate::utils::error::CustomHttpError;
+use crate::utils::error::HttpErrorCodes;
 use crate::utils::model_manager::pool_handler;
 use crate::utils::model_manager::Model;
 use crate::utils::model_manager::PGPool;
@@ -18,12 +18,17 @@ pub async fn update_user(
     new: web::Json<MutUser>,
     pool: web::Data<PGPool>,
     claim: Claims,
-) -> Result<HttpResponse, CustomHttpError> {
+) -> Result<HttpResponse, HttpErrorCodes> {
+    // Postgres pool handler
     let postgres_pool = pool_handler(pool)?;
+
+    // Update user
     let mut salted_user = new.clone();
     if id.clone() != claim.sub {
         return Ok(HttpResponse::Unauthorized().finish());
     }
+
+    // Encrypt password and generate cookie
     let encrypted_password = encrypt_password(&salted_user.password.unwrap())?;
     salted_user.password = Some(encrypted_password);
     let exp_time = chrono::Utc::now() + chrono::Duration::days(10);
@@ -37,8 +42,14 @@ pub async fn update_user(
         .expires(time)
         .path("/")
         .finish();
+
+    // Generate response
     let user = HttpResponse::Ok().cookie(cookie).json(&new.clone());
     salted_user.token = Some(token_enc);
+
+    // Update user in database
     User::update(id.clone(), &salted_user, &postgres_pool)?;
+
+    // Return updated user
     Ok(user)
 }

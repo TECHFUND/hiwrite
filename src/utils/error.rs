@@ -2,24 +2,31 @@ use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use serde::Serialize;
 use thiserror::Error;
 
-use super::auth::CryptoError;
+use super::auth::ErrorCodes;
 
 #[derive(Error, Debug)]
-pub enum CustomHttpError {
-    #[error("Incorrect parameter type.")]
+pub enum HttpErrorCodes {
+    // #[error("2001")] : "2001" is for bad request
+    #[error("2001")]
     BadRequest,
-    #[error("Resource not found.")]
+
+    // #[error("2002")] : "2002" is for not found
+    #[error("2002")]
     NotFound,
-    #[error("Unknown Internal Error")]
+
+    // #[error("2003")] : "2003" is for unknown
+    #[error("2003")]
     Unknown,
-    #[error("User is not authorized.")]
+
+    // #[error("2004")] : "2004" is for unauthorized
+    #[error("2004")]
     Unauthorized,
 }
 
-impl CustomHttpError {
+impl HttpErrorCodes {
     pub fn descriptor(&self) -> String {
         match self {
-            Self::BadRequest => String::from("Server was unable to handle data"),
+            Self::BadRequest => String::from("Unable to process request"),
             Self::Unknown => String::from("Internal server error"),
             Self::NotFound => String::from("Resource was not found"),
             Self::Unauthorized => String::from("Not authorized"),
@@ -27,6 +34,7 @@ impl CustomHttpError {
     }
 }
 
+// Error response
 #[derive(Serialize)]
 struct ErrorResponse {
     code: u16,
@@ -34,7 +42,8 @@ struct ErrorResponse {
     message: String,
 }
 
-impl ResponseError for CustomHttpError {
+impl ResponseError for HttpErrorCodes {
+    // Convert error to http response
     fn status_code(&self) -> StatusCode {
         match *self {
             Self::BadRequest => StatusCode::BAD_REQUEST,
@@ -44,6 +53,7 @@ impl ResponseError for CustomHttpError {
         }
     }
 
+    // Convert error to http response
     fn error_response(&self) -> HttpResponse {
         let status_code = self.status_code();
         let error_response = ErrorResponse {
@@ -56,25 +66,25 @@ impl ResponseError for CustomHttpError {
     }
 }
 
-impl From<diesel::result::Error> for CustomHttpError {
+impl From<diesel::result::Error> for HttpErrorCodes {
     fn from(e: diesel::result::Error) -> Self {
         match e {
-            diesel::result::Error::NotFound => CustomHttpError::NotFound,
-            _ => CustomHttpError::Unknown,
+            diesel::result::Error::NotFound => HttpErrorCodes::NotFound,
+            _ => HttpErrorCodes::Unknown,
         }
     }
 }
 
-impl From<jsonwebtoken::errors::Error> for CustomHttpError {
+impl From<jsonwebtoken::errors::Error> for HttpErrorCodes {
     fn from(e: jsonwebtoken::errors::Error) -> Self {
         match e {
-            _ => CustomHttpError::Unknown,
+            _ => HttpErrorCodes::Unknown,
         }
     }
 }
 
-impl From<CryptoError> for CustomHttpError {
-    fn from(e: CryptoError) -> Self {
+impl From<ErrorCodes> for HttpErrorCodes {
+    fn from(e: ErrorCodes) -> Self {
         match e {
             _ => Self::Unauthorized,
         }

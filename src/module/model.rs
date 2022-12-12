@@ -8,6 +8,7 @@ use diesel::PgConnection;
 use diesel::{Insertable, Queryable, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 
+// Module belongs to a page and a category
 #[derive(
     Debug, Identifiable, Associations, Serialize, Deserialize, Queryable, PartialEq, Clone, Eq, Hash,
 )]

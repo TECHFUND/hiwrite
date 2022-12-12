@@ -5,6 +5,7 @@ pub struct ModuleRouter;
 
 impl ModuleRouter {
     pub fn new() -> Scope {
+        // web::scope("/modules") defines the base path for all routes in this module.
         web::scope("/modules")
             .route("", web::post().to(create_module))
             .route("", web::get().to(get_modules))

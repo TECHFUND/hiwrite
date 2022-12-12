@@ -1,6 +1,6 @@
 use crate::module::model::ModuleCategory;
 use crate::utils::auth::Claims;
-use crate::utils::error::CustomHttpError;
+use crate::utils::error::HttpErrorCodes;
 use crate::utils::model_manager::pool_handler;
 use crate::utils::model_manager::Model;
 use crate::utils::model_manager::PGPool;
@@ -11,8 +11,13 @@ pub async fn delete_category(
     id: web::Path<String>,
     pool: web::Data<PGPool>,
     _: Claims,
-) -> Result<HttpResponse, CustomHttpError> {
+) -> Result<HttpResponse, HttpErrorCodes> {
+    // Postgres pool handler
     let postgres_pool = pool_handler(pool)?;
+
+    // Delete category
     let res = ModuleCategory::delete(id.clone(), &postgres_pool)?;
+
+    // Return deleted category
     Ok(HttpResponse::Ok().json(res))
 }

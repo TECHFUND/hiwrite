@@ -7,27 +7,38 @@ use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use super::error::CustomHttpError;
+use super::error::HttpErrorCodes;
 use crate::user::model;
 use crate::utils::model_manager::{pool_handler, Model, PGPool};
 
 #[derive(Error, Debug)]
-pub enum CryptoError {
-    #[error("An unknown cryptographic error has occured")]
+pub enum ErrorCodes {
+    // #[error("1000")] : "1000" is the default error code
+    #[error("1001")]
     Unknown,
-    #[error("User has failed their token comparison")]
+
+    // #[error("1002")] : "1002" for failed comparison
+    #[error("1002")]
     FailedComparison,
-    #[error("There is no user present")]
+
+    // #[error("1003")] : "1003" for no user
+    #[error("1003")]
     NoUser,
-    #[error("The user is not logged in")]
+
+    // #[error("1004")] : "1004" for not logged in
+    #[error("1004")]
     NotLoggedIn,
-    #[error("No auth header present.")]
+
+    // #[error("1005")] : "1005" for no auth header
+    #[error("1005")]
     NoAuthHeader,
-    #[error("Password operation failed.")]
+
+    // #[error("1006")] : "1006" for operation fail
+    #[error("1006")]
     OperationFail,
 }
 
-impl From<jsonwebtoken::errors::Error> for CryptoError {
+impl From<jsonwebtoken::errors::Error> for ErrorCodes {
     fn from(err: jsonwebtoken::errors::Error) -> Self {
         match err.kind() {
             _ => Self::Unknown,
@@ -35,7 +46,7 @@ impl From<jsonwebtoken::errors::Error> for CryptoError {
     }
 }
 
-impl From<argon2::password_hash::Error> for CryptoError {
+impl From<argon2::password_hash::Error> for ErrorCodes {
     fn from(e: argon2::password_hash::Error) -> Self {
         match e {
             _ => Self::OperationFail,
@@ -43,7 +54,7 @@ impl From<argon2::password_hash::Error> for CryptoError {
     }
 }
 
-pub fn encrypt(claim: Claims) -> Result<String, CryptoError> {
+pub fn encrypt(claim: Claims) -> Result<String, ErrorCodes> {
     let encoded_token = encode(
         &Header::default(),
         &claim,
@@ -53,7 +64,7 @@ pub fn encrypt(claim: Claims) -> Result<String, CryptoError> {
     Ok(encoded_token)
 }
 
-pub fn decrypt(jwt: &String) -> Result<Claims, CryptoError> {
+pub fn decrypt(jwt: &String) -> Result<Claims, ErrorCodes> {
     let decoded_token = decode::<Claims>(
         jwt,
         &DecodingKey::from_secret(std::env::var("APP_JWT_KEY").unwrap().as_bytes()),
@@ -63,22 +74,24 @@ pub fn decrypt(jwt: &String) -> Result<Claims, CryptoError> {
     Ok(decoded_token.claims)
 }
 
-pub fn compare(token: &Claims, enc_token: &String, pool: &PgConnection) -> Result<(), CryptoError> {
+pub fn compare(token: &Claims, enc_token: &String, pool: &PgConnection) -> Result<(), ErrorCodes> {
+    // Read user from database and compare token
     if let Ok(user) = model::User::read_one(token.sub.clone(), &pool) {
         if user.token.is_none() {
-            return Err(CryptoError::NotLoggedIn);
+            return Err(ErrorCodes::NotLoggedIn);
         }
         if user.token == Some(enc_token.clone()) {
             return Ok(());
         } else {
-            return Err(CryptoError::FailedComparison);
+            return Err(ErrorCodes::FailedComparison);
         };
     } else {
-        return Err(CryptoError::NoUser);
+        return Err(ErrorCodes::NoUser);
     }
 }
 
-pub fn encrypt_password(password: &String) -> Result<String, CryptoError> {
+pub fn encrypt_password(password: &String) -> Result<String, ErrorCodes> {
+    // Generate salt and hash password
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
 
@@ -94,7 +107,7 @@ pub struct Claims {
 }
 
 impl FromRequest for Claims {
-    type Error = CustomHttpError;
+    type Error = HttpErrorCodes;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
     type Config = ();
 
@@ -108,7 +121,7 @@ impl FromRequest for Claims {
                 let fut = authenticate(auth, &postgres_pool);
                 Box::pin(fut)
             }
-            _ => Box::pin(async { Err(CryptoError::NoAuthHeader.into()) }),
+            _ => Box::pin(async { Err(ErrorCodes::NoAuthHeader.into()) }),
         }
     }
 }
@@ -116,18 +129,21 @@ impl FromRequest for Claims {
 pub fn authenticate(
     auth_header: &HeaderValue,
     db: &PgConnection,
-) -> impl Future<Output = Result<Claims, CustomHttpError>> {
+) -> impl Future<Output = Result<Claims, HttpErrorCodes>> {
+    // Decrypt token and compare with database
     let encrypted_token = std::str::from_utf8(auth_header.as_bytes())
         .unwrap()
         .to_string();
 
     let decrypted_token = decrypt(&encrypted_token);
 
-    let mut logged_in = Err(CryptoError::NotLoggedIn);
+    // Check if user is logged in
+    let mut logged_in = Err(ErrorCodes::NotLoggedIn);
     if let Ok(decrypted_token) = &decrypted_token {
         logged_in = compare(&decrypted_token, &encrypted_token, db);
     }
 
+    // Return decrypted token if logged in
     async move {
         match logged_in {
             Ok(_) => Ok(decrypted_token?),

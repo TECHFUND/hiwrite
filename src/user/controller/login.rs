@@ -1,7 +1,7 @@
 use super::login_res::login_res;
 use crate::user::model::MutUser;
 use crate::user::model::User;
-use crate::utils::error::CustomHttpError;
+use crate::utils::error::HttpErrorCodes;
 use crate::utils::model_manager::pool_handler;
 use crate::utils::model_manager::Model;
 use crate::utils::model_manager::PGPool;
@@ -14,14 +14,19 @@ use argon2::PasswordVerifier;
 pub async fn login(
     user: web::Json<MutUser>,
     pool: web::Data<PGPool>,
-) -> Result<HttpResponse, CustomHttpError> {
+) -> Result<HttpResponse, HttpErrorCodes> {
+    // Postgres pool handler
     let postgres_pool = pool_handler(pool)?;
     let arg = Argon2::default();
+
+    // Get user
     let read_user = User::read_one(user.username.clone(), &postgres_pool)?;
     let is_default = read_user.username == "root" && read_user.password == "";
     if read_user.token.is_some() && is_default {
         return Ok(HttpResponse::Forbidden().finish());
     }
+
+    // if user is default, create a new token
     if is_default {
         let mut new_user = user.clone();
         let cookie = login_res(&mut new_user)?;
@@ -30,8 +35,11 @@ pub async fn login(
         User::update_with_token(&new_user, &postgres_pool)?;
         return Ok(cookie_response);
     }
+
+    // Verify password
     let read_user_password = PasswordHash::new(&read_user.password).unwrap();
 
+    // Match password and return token
     match arg.verify_password(
         user.password.clone().unwrap().as_bytes(),
         &read_user_password,

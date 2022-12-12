@@ -2,6 +2,8 @@ use actix_web::Scope;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone)]
+
+// This is the struct for the config file
 pub struct LocalConfig {
     pub postgres_username: String,
     pub postgres_password: String,

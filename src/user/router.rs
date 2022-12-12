@@ -5,6 +5,7 @@ use actix_web::{web, Scope};
 pub struct UserRouter;
 
 impl Router for UserRouter {
+    // Create a new scope for the user router and return it
     fn new() -> Scope {
         web::scope("/user")
             .route("", web::post().to(create_user))

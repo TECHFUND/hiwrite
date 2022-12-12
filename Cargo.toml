@@ -29,3 +29,6 @@ time = "0.2.23"
 
 [dev-dependencies]
 actix-rt = "2.2.0"
+
+[build-dependencies]
+paperclip = { version = "0.5", features = ["v2", "codegen"] }
