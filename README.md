@@ -7,9 +7,9 @@
 To get started with our CMS written in Rust, you will need to have the following installed on your system:
 
     Rust: https://www.rust-lang.org/tools/install
-    Postgres: https://www.postgresql.org/download/
+    PostgreSQL: https://www.postgresql.org/download/
 
-The easiet way to install Postgres is via https://postgresapp.com/ app. Follow the following instrructions to install Postgres app.
+The easiet way to install PostgreSQL is via https://postgresapp.com/ app. Follow the following instructions to install Postgres app.
 
 
 
