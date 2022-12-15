@@ -2,6 +2,8 @@
 
 ## Getting Started
 
+### Installing Dependecies
+
 To get started with our CMS written in Rust, you will need to have the following installed on your system:
 
     Rust: https://www.rust-lang.org/tools/install
@@ -25,6 +27,12 @@ Once you have Postgres 14 up and running , prepare a new table called "hiwrite"
 
 <img width="810" alt="DB" src="https://user-images.githubusercontent.com/4836107/207767467-cd6d6753-9c4f-4ee6-afd1-01d4f30084b4.png">
 
+
+### Postgres DB Viewer
+
+You might require a postgres DB viewer , https://dbeaver.io/ is one open source application to view database, To install it you can download the application from https://dbeaver.io/download/ .
+
+### Running HiWRITE
 
 Once you have these postgres and rust installed, you can follow these steps to get the CMS up and running:
 
