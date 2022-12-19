@@ -101,7 +101,7 @@ To avoid having to pass RUSTFLAGS='...' in the command , you can also put the fo
 
 Once the installation is complete, you can use diesel_cli by running the diesel command in your terminal. You can also check the version of diesel_cli you have installed by running diesel --version.
 
-
+### Running HiWRITE
 
 Navigate to the project directory and build the project
 
