@@ -92,6 +92,13 @@ Now you should pass the library location to cargo in order to install diesel_cli
 
 Above should install diesel_cli 
 
+
+To avoid having to pass RUSTFLAGS='...' in the command , you can also put the following in your `~/.cargo/config.toml` file :
+
+    [target.aarch64-apple-darwin]
+    rustflags = '-L /opt/homebrew/opt/libpq/lib -L /opt/homebrew/lib'
+
+
 Once the installation is complete, you can use diesel_cli by running the diesel command in your terminal. You can also check the version of diesel_cli you have installed by running diesel --version.
 
 
