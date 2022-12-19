@@ -40,6 +40,62 @@ Clone this repository to your local machine
 
     git clone https://github.com/TECHFUND/hiwrite
 
+
+### Install Rust
+
+To install the Rust programming language , you can use one of the following methods:
+
+#### Using Homebrew:
+
+Open a terminal window on your Mac M1.
+Run the following command to install Rust using Homebrew:
+
+    brew install rust
+
+#### Using rustup:
+
+Open a terminal window on your Mac M1.
+Run the following command to install rustup:
+
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+This will download and run the rustup installer, which will install the latest stable version of Rust.
+
+Once Rust is installed, you can check the version of Rust you have installed by running the following command in your terminal:
+
+    rustc --version
+
+
+### Installing diesel_cli
+
+Once Rust is installed, you can use the following steps to install diesel_cli:
+
+Open a terminal window on your Mac M1.
+Run the following command to install diesel_cli:
+
+    cargo install diesel_cli --no-default-features --features postgres
+
+This will download and compile diesel_cli, and install it to your system.
+
+### Debugging install on M1 mac
+
+First make sure you have the libpg installed 
+
+        brew install postgresql libpq
+
+Now you should have the libraries installed here : /opt/homebrew/opt/libpq/lib
+Make sure you have libpq directory available on above location.
+
+Now you should pass the library location to cargo in order to install diesel_cli
+
+     RUSTFLAGS='-L /opt/homebrew/opt/libpq/lib' cargo install diesel_cli --no-default-features --features postgres
+
+Above should install diesel_cli 
+
+Once the installation is complete, you can use diesel_cli by running the diesel command in your terminal. You can also check the version of diesel_cli you have installed by running diesel --version.
+
+
+
 Navigate to the project directory and build the project
 
       cd hiwrite
