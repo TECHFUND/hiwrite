@@ -1,5 +1,5 @@
 use crate::page::model::*;
-use crate::schema::module_category;
+use crate::schema::category;
 use crate::schema::modules;
 use crate::utils::model_manager::Model;
 
@@ -52,7 +52,7 @@ pub struct FieldsDTO {
 )]
 #[primary_key(uuid)]
 #[belongs_to(Page, foreign_key = "page_uuid")]
-#[table_name = "module_category"]
+#[table_name = "category"]
 pub struct ModuleCategory {
     pub uuid: String,
     pub page_uuid: String,
@@ -60,7 +60,7 @@ pub struct ModuleCategory {
 }
 
 #[derive(Debug, Serialize, Deserialize, AsChangeset, Insertable, PartialEq, Clone, Eq, Hash)]
-#[table_name = "module_category"]
+#[table_name = "category"]
 pub struct MutCategory {
     pub title: String,
     pub page_uuid: String,
@@ -69,10 +69,8 @@ pub struct MutCategory {
 
 impl ModuleCategory {
     pub fn join(_id: String, db: &PgConnection) -> Result<Vec<Module>, diesel::result::Error> {
-        use module_category::dsl::uuid;
-        let categories = module_category::table
-            .filter(uuid.eq(_id))
-            .first::<Self>(db)?;
+        use category::dsl::uuid;
+        let categories = category::table.filter(uuid.eq(_id)).first::<Self>(db)?;
 
         Module::belonging_to(&categories).load::<Module>(db)
     }
@@ -80,15 +78,15 @@ impl ModuleCategory {
 
 impl Model<Self, MutCategory, String, ModuleCategory> for ModuleCategory {
     fn create(new: &MutCategory, db: &PgConnection) -> Result<usize, diesel::result::Error> {
-        Ok(diesel::insert_into(module_category::table)
+        Ok(diesel::insert_into(category::table)
             .values(new)
             .execute(db)?)
     }
 
     fn read_one(_id: String, db: &PgConnection) -> Result<ModuleCategory, diesel::result::Error> {
-        use module_category::dsl::uuid;
+        use category::dsl::uuid;
 
-        let module = module_category::table
+        let module = category::table
             .filter(uuid.eq(_id))
             .first::<ModuleCategory>(db)?;
 
@@ -104,17 +102,17 @@ impl Model<Self, MutCategory, String, ModuleCategory> for ModuleCategory {
         new: &MutCategory,
         db: &PgConnection,
     ) -> Result<usize, diesel::result::Error> {
-        use module_category::dsl::uuid;
+        use category::dsl::uuid;
 
-        Ok(diesel::update(module_category::table.filter(uuid.eq(_id)))
+        Ok(diesel::update(category::table.filter(uuid.eq(_id)))
             .set(new)
             .execute(db)?)
     }
 
     fn delete(_id: String, db: &PgConnection) -> Result<usize, diesel::result::Error> {
-        use module_category::dsl::uuid;
+        use category::dsl::uuid;
 
-        Ok(diesel::delete(module_category::table.filter(uuid.eq(_id))).execute(db)?)
+        Ok(diesel::delete(category::table.filter(uuid.eq(_id))).execute(db)?)
     }
 }
 

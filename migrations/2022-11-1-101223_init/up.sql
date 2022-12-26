@@ -1,3 +1,10 @@
+CREATE TABLE IF NOT EXISTS users (
+    uuid varchar(255) PRIMARY KEY,
+    username varchar(255) NOT NULL UNIQUE,
+    password varchar(255) NOT NULL,
+    token varchar(511)
+);
+
 CREATE TABLE IF NOT EXISTS pages (
     uuid varchar(255) PRIMARY KEY,
     page_name varchar(500) NOT NULL,
@@ -6,7 +13,7 @@ CREATE TABLE IF NOT EXISTS pages (
     time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE module_category (
+CREATE TABLE category (
     uuid varchar(255) PRIMARY KEY,
     page_uuid varchar(255) NOT NULL,
     title varchar(255) NOT NULL,
@@ -20,12 +27,7 @@ CREATE TABLE IF NOT EXISTS modules (
     title varchar(255) NOT NULL,
     content TEXT NOT NULL,
     FOREIGN KEY (page_uuid) REFERENCES pages(uuid) ON DELETE CASCADE,
-    FOREIGN KEY (category_uuid) REFERENCES module_category(uuid) ON DELETE CASCADE
+    FOREIGN KEY (category_uuid) REFERENCES category(uuid) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS users (
-    uuid varchar(255) PRIMARY KEY,
-    username varchar(255) NOT NULL UNIQUE,
-    password varchar(255) NOT NULL,
-    token varchar(511)
-);
+

@@ -4,7 +4,7 @@ use crate::utils::model_manager::pool_handler;
 use crate::utils::model_manager::PGPool;
 use actix_web::{web, HttpResponse};
 
-pub async fn get_module_category(
+pub async fn get_category(
     id: web::Path<String>,
     pool: web::Data<PGPool>,
 ) -> Result<HttpResponse, HttpErrorCodes> {

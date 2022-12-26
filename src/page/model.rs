@@ -8,7 +8,7 @@ use crate::module::model::CategoryDTO;
 use crate::module::model::FieldsDTO;
 use crate::module::model::Module;
 use crate::module::model::ModuleCategory;
-use crate::schema::module_category;
+use crate::schema::category;
 use crate::schema::modules;
 use crate::schema::pages;
 use crate::utils::model_manager::Model;
@@ -201,8 +201,8 @@ impl Page {
         let modules = Module::belonging_to(&filtered_page).load::<Module>(db)?;
 
         let categories: Vec<ModuleCategory> = Module::belonging_to(&filtered_page)
-            .inner_join(module_category::table)
-            .select(module_category::all_columns)
+            .inner_join(category::table)
+            .select(category::all_columns)
             .load::<ModuleCategory>(db)?;
 
         let module_array: Vec<(Vec<Module>, ModuleCategory)> = Module::belonging_to(&categories)

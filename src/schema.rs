@@ -1,5 +1,5 @@
 diesel::table! {
-    module_category (uuid) {
+    category (uuid) {
         uuid -> Varchar,
         page_uuid -> Varchar,
         title -> Varchar,
@@ -35,8 +35,8 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(module_category -> pages (page_uuid));
-diesel::joinable!(modules -> module_category (category_uuid));
+diesel::joinable!(category -> pages (page_uuid));
+diesel::joinable!(modules -> category (category_uuid));
 diesel::joinable!(modules -> pages (page_uuid));
 
-diesel::allow_tables_to_appear_in_same_query!(module_category, modules, pages, users,);
+diesel::allow_tables_to_appear_in_same_query!(category, modules, pages, users,);

@@ -19,6 +19,7 @@ handlebars = {version = "3.5.2", features = ["dir_source"]}
 rand_core = { version = "0.6", features = ["std"] }
 serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0.60"
+serde_derive = "1.0.152"
 notify = "4.0.16"
 thiserror = "1.0.22"
 log = "0.4.0"
@@ -26,6 +27,10 @@ jsonwebtoken = "7.2.0"
 uuid = {version = "0.8", features=["serde", "v4"]}
 futures = "*"
 time = "0.2.23"
+zip = "0.6.3" 
+toml = "0.6.0" 
+libloading = "0.7"   
+is_superuser = "1.0.1"
 
 [dev-dependencies]
 actix-rt = "2.2.0"
