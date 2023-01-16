@@ -17,6 +17,7 @@ mod page;
 mod schema;
 mod user;
 mod utils;
+mod plugin;
 
 use crate::page::controller::display::display_page;
 use crate::user::router::UserRouter;

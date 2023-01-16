@@ -1,11 +1,24 @@
 use std::ffi::OsStr;
 use std::{env, fs};
 use std::io::ErrorKind;
-use libloading::Symbol;
 use std::io::ErrorKind::{Interrupted, NotFound, Other, OutOfMemory, PermissionDenied, UnexpectedEof, Unsupported};
 use crate::plugin::error::PluginErrorCodes;
 use crate::plugin::{HiWriteHook, Plugin};
 use crate::plugin::metadata::PluginMetadata;
+use libloading::{Library, Symbol};
+
+macro_rules! initialize_later {
+    () => {
+        None
+    };
+}
+
+macro_rules! init_now {
+    ($a:expr) => {
+        Some($a)
+    };
+}
+
 
 impl Plugin {
     fn load_archive<S: Copy + Into<String> + AsRef<OsStr>>(
@@ -157,6 +170,32 @@ impl Plugin {
 
     pub fn get_metadata(&self) -> &Option<PluginMetadata> {
         &self.metadata
+    }
+
+    pub fn load_metadata(&mut self) -> Result<(), PluginErrorCodes> {
+        match PluginMetadata::load(self) {
+            Ok(v) => {
+                let plugin_dir_name = env::temp_dir().join("hiwrite_plugin").join(&v.name);
+
+                fs::create_dir_all(&plugin_dir_name).unwrap();
+                fs::copy(&v.objfile, plugin_dir_name.join(&v.objfile)).unwrap();
+
+                self.raw =
+                    unsafe { init_now!(Library::new(plugin_dir_name.join(&v.objfile)).unwrap()) };
+                self.is_valid = true;
+                self.metadata = init_now!(v);
+
+                Ok(())
+            }
+            Err(e) => {
+                log::error!(
+                    "Couldn't load metadata ({}): {}",
+                    self.filename,
+                    e.to_string()
+                );
+                Err(e)
+            }
+        }
     }
 
     pub fn terminate(&mut self) -> Result<(), PluginErrorCodes> {

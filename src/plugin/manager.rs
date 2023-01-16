@@ -1,9 +1,8 @@
 extern crate libloading;
-use crate::error::PluginErrorCodes;
 use libloading::Symbol;
 use std::{
     env,
-    ffi::{c_int, c_void},
+    ffi::{c_void},
 };
 use std::os::raw::c_int;
 use crate::plugin::error::PluginErrorCodes;
@@ -95,9 +94,8 @@ impl Drop for Manager {
         for plug in &mut self.injected_plugin {
             plug.terminate().unwrap_or_else(|e| {
                 log::warn!(
-                    "Couldn't unload hiwrite_plugin: {} (err {}). No cleanup will be performed.",
-                    e.to_string(),
-                    e.raw_os_error().unwrap()
+                    "Couldn't unload hiwrite_plugin: {}",
+                    e.to_string()
                 )});
             drop(plug);
         }
@@ -105,9 +103,8 @@ impl Drop for Manager {
             Ok(()) => log::trace!("Removed directory: {}", plug_dir.display()),
             Err(e) => {
                 log::warn!(
-                    "Couldn't remove directory: {} (err {}). No cleanup will be performed.",
-                    e.to_string(),
-                    e.raw_os_error().unwrap()
+                    "Couldn't remove directory: {} . No cleanup will be performed.",
+                    e.to_string()
                 );
             }
         }

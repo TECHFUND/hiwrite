@@ -3,8 +3,6 @@
 extern crate libloading;
 extern crate log;
 
-use crate::error::PluginErrorCodes;
-use crate::VHook;
 use libloading::{Library, Symbol};
 use serde::Deserialize;
 use std::env::{self};
@@ -12,34 +10,23 @@ use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::ErrorKind::{self, *};
 use zip::ZipArchive;
-use crate::metadata::PluginMetadata;
 use crate::plugin::error::PluginErrorCodes;
 use crate::plugin::metadata::PluginMetadata;
 use crate::plugin::HiWriteHook;
 
 type LaterInitialized<T> = Option<T>;
-macro_rules! initialize_later {
-    () => {
-        None
-    };
-}
-macro_rules! init_now {
-    ($a:expr) => {
-        Some($a)
-    };
+
+#[derive(Deserialize)]
+pub struct Data {
+    pub(crate) metadata: Metadata,
 }
 
 #[derive(Deserialize)]
-struct Data {
-    metadata: Metadata,
-}
-
-#[derive(Deserialize)]
-struct Metadata {
+pub struct Metadata {
     description: Option<String>,
-    version: String,
-    name: String,
-    objfile: String,
+    pub(crate) version: String,
+    pub(crate) name: String,
+    pub(crate) objfile: String,
 }
 
 #[derive(Debug)]
