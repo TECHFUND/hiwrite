@@ -1,6 +1,6 @@
 /target
 .env
-
+.idea/
 # vscode stuff
 *.code-workspace
 .vscode
