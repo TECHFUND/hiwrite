@@ -18,8 +18,8 @@ The easiet way to install PostgreSQL is via https://postgresapp.com/ app. Follow
 2) Click "Initialize" to create a new server and make sure you are using PostgreSQL 14
 3) Prepare the $PATH to include postgres in ENV
 
-        sudo mkdir -p /etc/paths.d &&
-        echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp
+       sudo mkdir -p /etc/paths.d &&
+       echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp
 
 <img width="299" alt="postgres" src="https://user-images.githubusercontent.com/4836107/207767101-3ed0b7bb-7306-49de-a4dc-3de98ca07b8a.png">
 
@@ -81,14 +81,14 @@ This will download and compile diesel_cli, and install it to your system.
 
 First make sure you have the libpg installed 
 
-        brew install postgresql libpq
+    brew install postgresql libpq
 
 Now you should have the libraries installed here : /opt/homebrew/opt/libpq/lib
 Make sure you have libpq directory available on above location.
 
 Now you should pass the library location to cargo in order to install diesel_cli
 
-     RUSTFLAGS='-L /opt/homebrew/opt/libpq/lib' cargo install diesel_cli --no-default-features --features postgres
+    RUSTFLAGS='-L /opt/homebrew/opt/libpq/lib' cargo install diesel_cli --no-default-features --features postgres
 
 Above should install diesel_cli 
 
@@ -105,8 +105,8 @@ Once the installation is complete, you can use diesel_cli by running the diesel 
 
 Navigate to the project directory and build the project
 
-      cd hiwrite
-      cargo build
+    cd hiwrite
+    cargo build
 
 Create a .env file in the project root and set the following environment variables:
 
