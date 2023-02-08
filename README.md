@@ -134,6 +134,13 @@ The CMS exposes a RESTful API that allows you to manage the content of your site
 The API documentation can be found at http://localhost:8000/api/docs.
 
 
+### Plugin 
+
+<img width="948" alt="plugin" src="https://user-images.githubusercontent.com/4836107/217523614-3f6db44b-3bf0-428b-bf6c-072485818082.png">
+
+
+
+
 License
 
 This project is licensed under the gplv3 License. See LICENSE for more details.
