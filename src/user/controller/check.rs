@@ -1,5 +1,7 @@
+use crate::user::model::User;
 use crate::utils::auth::authenticate;
 use crate::utils::error::HttpErrorCodes;
+use crate::utils::model_manager::Model;
 use crate::utils::model_manager::pool_handler;
 use crate::utils::model_manager::PGPool;
 use actix_web::web;
@@ -19,7 +21,10 @@ pub async fn check_login(
 
     // Return the result
     match auth_res {
-        Ok(_) => Ok(HttpResponse::Ok().finish()),
+        Ok(u) => {
+            let user = User::read_one(u.sub.clone(), &postgres_pool)?;
+            Ok(HttpResponse::Ok().json(user))
+        }
         Err(_) => Ok(HttpResponse::Unauthorized().finish()),
     }
 }

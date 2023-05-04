@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::error::HttpErrorCodes;
-use crate::user::model;
+use crate::user::model::{self, User};
 use crate::utils::model_manager::{pool_handler, Model, PGPool};
 
 #[derive(Error, Debug)]
@@ -74,14 +74,14 @@ pub fn decrypt(jwt: &String) -> Result<Claims, ErrorCodes> {
     Ok(decoded_token.claims)
 }
 
-pub fn compare(token: &Claims, enc_token: &String, pool: &PgConnection) -> Result<(), ErrorCodes> {
+pub fn compare(token: &Claims, enc_token: &String, pool: &PgConnection) -> Result<User, ErrorCodes> {
     // Read user from database and compare token
     if let Ok(user) = model::User::read_one(token.sub.clone(), &pool) {
         if user.token.is_none() {
             return Err(ErrorCodes::NotLoggedIn);
         }
         if user.token == Some(enc_token.clone()) {
-            return Ok(());
+            return Ok(user);
         } else {
             return Err(ErrorCodes::FailedComparison);
         };
@@ -146,7 +146,9 @@ pub fn authenticate(
     // Return decrypted token if logged in
     async move {
         match logged_in {
-            Ok(_) => Ok(decrypted_token?),
+            Ok(_) => {
+                Ok(decrypted_token?)
+            },
             Err(e) => Err(e.into()),
         }
     }
