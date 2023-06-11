@@ -31,6 +31,8 @@ zip = "0.6.3"
 toml = "0.6.0" 
 libloading = "0.7"   
 is_superuser = "1.0.1"
+openssl = { version = "0.10", features = ["vendored"] }
+openssl-sys = "0.9.78"
 
 [dev-dependencies]
 actix-rt = "2.2.0"

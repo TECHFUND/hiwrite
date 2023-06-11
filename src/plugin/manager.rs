@@ -20,7 +20,7 @@ pub type HiWriteHook = unsafe extern "C" fn(*mut c_void) -> c_int;
 
 impl Manager {
     pub fn new() -> Self {
-        #[cfg(unix)]
+        // #[cfg(unix)]
         Self {
             injected_plugin: Vec::new(),
             entry_point: String::from("plugin_init"),

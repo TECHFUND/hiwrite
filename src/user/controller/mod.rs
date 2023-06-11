@@ -2,6 +2,7 @@ pub mod check;
 pub mod create;
 pub mod delete;
 pub mod get;
+pub mod signup;
 pub mod login;
 pub mod login_res;
 pub mod logout;

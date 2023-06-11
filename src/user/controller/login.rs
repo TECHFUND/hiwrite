@@ -21,7 +21,8 @@ pub async fn login(
 
     // Get user
     let read_user = User::read_one(user.username.clone(), &postgres_pool)?;
-    let is_default = read_user.username == "root" && read_user.password == "";
+    // I set the password "root" when signup
+    let is_default = read_user.username == "root" && read_user.password == "root";
     if read_user.token.is_some() && is_default {
         return Ok(HttpResponse::Forbidden().finish());
     }
@@ -33,7 +34,8 @@ pub async fn login(
         let cookie_response = HttpResponse::Accepted().cookie(cookie.clone()).finish();
         new_user.token = Some(cookie.value().to_string());
         User::update_with_token(&new_user, &postgres_pool)?;
-        return Ok(cookie_response);
+        let read_user = User::read_one(new_user.username.clone(), &postgres_pool)?;
+        return Ok(HttpResponse::Ok().json(read_user));
     }
 
     // Verify password
@@ -50,7 +52,8 @@ pub async fn login(
             let cookie_response = HttpResponse::Ok().cookie(cookie.clone()).finish();
             new_user.token = Some(cookie.value().to_string());
             User::update_with_token(&new_user, &postgres_pool)?;
-            Ok(cookie_response)
+            let read_user = User::read_one(new_user.username.clone(), &postgres_pool)?;
+            Ok(HttpResponse::Ok().json(read_user))
         }
         _ => Ok(HttpResponse::Unauthorized().json("Failed to authenticate.")),
     }
