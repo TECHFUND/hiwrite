@@ -58,7 +58,7 @@ pub fn encrypt(claim: Claims) -> Result<String, ErrorCodes> {
     let encoded_token = encode(
         &Header::default(),
         &claim,
-        &EncodingKey::from_secret(std::env::var("APP_JWT_KEY").unwrap().as_bytes()),
+        &EncodingKey::from_secret(std::env::var("app_jwt_key").unwrap().as_bytes()),
     )?;
 
     Ok(encoded_token)
@@ -67,7 +67,7 @@ pub fn encrypt(claim: Claims) -> Result<String, ErrorCodes> {
 pub fn decrypt(jwt: &String) -> Result<Claims, ErrorCodes> {
     let decoded_token = decode::<Claims>(
         jwt,
-        &DecodingKey::from_secret(std::env::var("APP_JWT_KEY").unwrap().as_bytes()),
+        &DecodingKey::from_secret(std::env::var("app_jwt_key").unwrap().as_bytes()),
         &Validation::default(),
     )?;
 
