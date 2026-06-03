@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 use diesel::PgConnection;
+use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -14,7 +14,8 @@ use crate::schema::pages;
 use crate::utils::model_manager::Model;
 
 #[derive(Identifiable, Debug, Serialize, Deserialize, Queryable, PartialEq, Clone)]
-#[primary_key(uuid)]
+#[diesel(primary_key(uuid))]
+#[diesel(table_name = pages)]
 pub struct Page {
     pub uuid: String,
     pub page_name: String,
@@ -24,7 +25,7 @@ pub struct Page {
 }
 
 #[derive(Insertable, AsChangeset, Deserialize, Serialize, Clone)]
-#[table_name = "pages"]
+#[diesel(table_name = pages)]
 pub struct MutPage {
     pub uuid: Option<String>,
     pub page_name: String,
@@ -102,13 +103,13 @@ impl From<Page> for PageDTO {
 }
 
 impl Model<Page, MutPage, String, PageDTO> for Page {
-    fn create(new_page: &MutPage, db: &PgConnection) -> Result<usize, diesel::result::Error> {
+    fn create(new_page: &MutPage, db: &mut PgConnection) -> Result<usize, diesel::result::Error> {
         Ok(diesel::insert_into(pages::table)
             .values(new_page)
             .execute(db)?)
     }
 
-    fn read_one(_id: String, db: &PgConnection) -> Result<PageDTO, diesel::result::Error> {
+    fn read_one(_id: String, db: &mut PgConnection) -> Result<PageDTO, diesel::result::Error> {
         use pages::dsl::uuid;
 
         let res = pages::table.filter(uuid.eq(_id)).first::<Self>(db)?.into();
@@ -116,7 +117,7 @@ impl Model<Page, MutPage, String, PageDTO> for Page {
         Ok(res)
     }
 
-    fn read_all(db: &PgConnection) -> Result<Vec<PageDTO>, diesel::result::Error> {
+    fn read_all(db: &mut PgConnection) -> Result<Vec<PageDTO>, diesel::result::Error> {
         let res = pages::table
             .load::<Self>(db)?
             .into_iter()
@@ -129,7 +130,7 @@ impl Model<Page, MutPage, String, PageDTO> for Page {
     fn update(
         _id: String,
         new_page: &MutPage,
-        db: &PgConnection,
+        db: &mut PgConnection,
     ) -> Result<usize, diesel::result::Error> {
         use pages::dsl::uuid;
 
@@ -138,7 +139,7 @@ impl Model<Page, MutPage, String, PageDTO> for Page {
             .execute(db)?)
     }
 
-    fn delete(_id: String, db: &PgConnection) -> Result<usize, diesel::result::Error> {
+    fn delete(_id: String, db: &mut PgConnection) -> Result<usize, diesel::result::Error> {
         use pages::dsl::uuid;
 
         Ok(diesel::delete(pages::table.filter(uuid.eq(_id))).execute(db)?)
@@ -148,7 +149,7 @@ impl Model<Page, MutPage, String, PageDTO> for Page {
 impl Page {
     pub fn read_one_join_on(
         _id: String,
-        db: &PgConnection,
+        db: &mut PgConnection,
     ) -> Result<PageModuleDTO, diesel::result::Error> {
         use modules::dsl::category_uuid;
         use pages::dsl::uuid;
@@ -192,7 +193,7 @@ impl Page {
 
     pub fn read_one_join_on_url(
         id: String,
-        db: &PgConnection,
+        db: &mut PgConnection,
     ) -> Result<(Self, FieldsDTO), diesel::result::Error> {
         use crate::schema::pages::dsl::page_url;
 

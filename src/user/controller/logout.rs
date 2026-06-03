@@ -1,5 +1,5 @@
 use crate::utils::error::HttpErrorCodes;
-use actix_web::{cookie::Cookie, HttpResponse};
+use actix_web::{HttpResponse, cookie::Cookie};
 use time::OffsetDateTime;
 
 pub async fn logout() -> Result<HttpResponse, HttpErrorCodes> {

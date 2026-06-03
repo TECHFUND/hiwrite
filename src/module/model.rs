@@ -3,8 +3,8 @@ use crate::schema::category;
 use crate::schema::modules;
 use crate::utils::model_manager::Model;
 
-use diesel::prelude::*;
 use diesel::PgConnection;
+use diesel::prelude::*;
 use diesel::{Insertable, Queryable, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 
@@ -12,10 +12,10 @@ use serde::{Deserialize, Serialize};
 #[derive(
     Debug, Identifiable, Associations, Serialize, Deserialize, Queryable, PartialEq, Clone, Eq, Hash,
 )]
-#[belongs_to(Page, foreign_key = "page_uuid")]
-#[belongs_to(ModuleCategory, foreign_key = "category_uuid")]
-#[primary_key(uuid)]
-#[table_name = "modules"]
+#[diesel(belongs_to(Page, foreign_key = page_uuid))]
+#[diesel(belongs_to(ModuleCategory, foreign_key = category_uuid))]
+#[diesel(primary_key(uuid))]
+#[diesel(table_name = modules)]
 pub struct Module {
     pub uuid: String,
     pub page_uuid: String,
@@ -25,7 +25,7 @@ pub struct Module {
 }
 
 #[derive(Insertable, AsChangeset, Deserialize, Serialize, Clone)]
-#[table_name = "modules"]
+#[diesel(table_name = modules)]
 pub struct MutModule {
     pub uuid: Option<String>,
     pub title: String,
@@ -50,9 +50,9 @@ pub struct FieldsDTO {
 #[derive(
     Debug, Identifiable, Associations, Serialize, Deserialize, Queryable, PartialEq, Clone, Eq, Hash,
 )]
-#[primary_key(uuid)]
-#[belongs_to(Page, foreign_key = "page_uuid")]
-#[table_name = "category"]
+#[diesel(primary_key(uuid))]
+#[diesel(belongs_to(Page, foreign_key = page_uuid))]
+#[diesel(table_name = category)]
 pub struct ModuleCategory {
     pub uuid: String,
     pub page_uuid: String,
@@ -60,7 +60,7 @@ pub struct ModuleCategory {
 }
 
 #[derive(Debug, Serialize, Deserialize, AsChangeset, Insertable, PartialEq, Clone, Eq, Hash)]
-#[table_name = "category"]
+#[diesel(table_name = category)]
 pub struct MutCategory {
     pub title: String,
     pub page_uuid: String,
@@ -68,7 +68,7 @@ pub struct MutCategory {
 }
 
 impl ModuleCategory {
-    pub fn join(_id: String, db: &PgConnection) -> Result<Vec<Module>, diesel::result::Error> {
+    pub fn join(_id: String, db: &mut PgConnection) -> Result<Vec<Module>, diesel::result::Error> {
         use category::dsl::uuid;
         let categories = category::table.filter(uuid.eq(_id)).first::<Self>(db)?;
 
@@ -77,13 +77,16 @@ impl ModuleCategory {
 }
 
 impl Model<Self, MutCategory, String, ModuleCategory> for ModuleCategory {
-    fn create(new: &MutCategory, db: &PgConnection) -> Result<usize, diesel::result::Error> {
+    fn create(new: &MutCategory, db: &mut PgConnection) -> Result<usize, diesel::result::Error> {
         Ok(diesel::insert_into(category::table)
             .values(new)
             .execute(db)?)
     }
 
-    fn read_one(_id: String, db: &PgConnection) -> Result<ModuleCategory, diesel::result::Error> {
+    fn read_one(
+        _id: String,
+        db: &mut PgConnection,
+    ) -> Result<ModuleCategory, diesel::result::Error> {
         use category::dsl::uuid;
 
         let module = category::table
@@ -93,14 +96,14 @@ impl Model<Self, MutCategory, String, ModuleCategory> for ModuleCategory {
         Ok(module)
     }
 
-    fn read_all(_db: &PgConnection) -> Result<Vec<ModuleCategory>, diesel::result::Error> {
+    fn read_all(_db: &mut PgConnection) -> Result<Vec<ModuleCategory>, diesel::result::Error> {
         unimplemented!()
     }
 
     fn update(
         _id: String,
         new: &MutCategory,
-        db: &PgConnection,
+        db: &mut PgConnection,
     ) -> Result<usize, diesel::result::Error> {
         use category::dsl::uuid;
 
@@ -109,7 +112,7 @@ impl Model<Self, MutCategory, String, ModuleCategory> for ModuleCategory {
             .execute(db)?)
     }
 
-    fn delete(_id: String, db: &PgConnection) -> Result<usize, diesel::result::Error> {
+    fn delete(_id: String, db: &mut PgConnection) -> Result<usize, diesel::result::Error> {
         use category::dsl::uuid;
 
         Ok(diesel::delete(category::table.filter(uuid.eq(_id))).execute(db)?)
@@ -117,13 +120,16 @@ impl Model<Self, MutCategory, String, ModuleCategory> for ModuleCategory {
 }
 
 impl Model<Self, MutModule, String, Module> for Module {
-    fn create(new_module: &MutModule, db: &PgConnection) -> Result<usize, diesel::result::Error> {
+    fn create(
+        new_module: &MutModule,
+        db: &mut PgConnection,
+    ) -> Result<usize, diesel::result::Error> {
         Ok(diesel::insert_into(modules::table)
             .values(new_module)
             .execute(db)?)
     }
 
-    fn read_one(mod_id: String, db: &PgConnection) -> Result<Module, diesel::result::Error> {
+    fn read_one(mod_id: String, db: &mut PgConnection) -> Result<Module, diesel::result::Error> {
         use modules::dsl::uuid;
 
         let module = modules::table.filter(uuid.eq(mod_id)).first::<Self>(db)?;
@@ -131,7 +137,7 @@ impl Model<Self, MutModule, String, Module> for Module {
         Ok(module.into())
     }
 
-    fn read_all(db: &PgConnection) -> Result<Vec<Module>, diesel::result::Error> {
+    fn read_all(db: &mut PgConnection) -> Result<Vec<Module>, diesel::result::Error> {
         use modules::dsl::category_uuid;
         Ok(modules::table
             .filter(category_uuid.is_null())
@@ -141,7 +147,7 @@ impl Model<Self, MutModule, String, Module> for Module {
             .collect())
     }
 
-    fn delete(mod_id: String, db: &PgConnection) -> Result<usize, diesel::result::Error> {
+    fn delete(mod_id: String, db: &mut PgConnection) -> Result<usize, diesel::result::Error> {
         use modules::dsl::uuid;
 
         Ok(diesel::delete(modules::table.filter(uuid.eq(mod_id))).execute(db)?)
@@ -150,7 +156,7 @@ impl Model<Self, MutModule, String, Module> for Module {
     fn update(
         mod_id: String,
         new_module: &MutModule,
-        db: &PgConnection,
+        db: &mut PgConnection,
     ) -> Result<usize, diesel::result::Error> {
         use modules::dsl::uuid;
 

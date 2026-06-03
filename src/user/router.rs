@@ -1,6 +1,8 @@
-use super::controller::{check::*, create::*, delete::*, get::*, login::*, logout::*, update::*, signup::*};
+use super::controller::{
+    check::*, create::*, delete::*, get::*, login::*, logout::*, signup::*, update::*,
+};
 use crate::utils::structs::Router;
-use actix_web::{web, Scope};
+use actix_web::{Scope, web};
 
 pub struct UserRouter;
 

@@ -1,11 +1,7 @@
-extern crate libloading;
-use libloading::Symbol;
-use std::{
-    env,
-    ffi::{c_void},
-};
-use std::os::raw::c_int;
 use crate::plugin::error::PluginErrorCodes;
+use libloading::Symbol;
+use std::os::raw::c_int;
+use std::{env, ffi::c_void};
 
 use super::plugin::Plugin;
 
@@ -42,7 +38,11 @@ impl Manager {
         self.entry_point = String::from(entry_point_with_null)
     }
 
-    pub fn get_hook(&mut self, plugin: &Plugin, hook: &str) -> Result<HiWriteHook, PluginErrorCodes> {
+    pub fn get_hook(
+        &mut self,
+        plugin: &Plugin,
+        hook: &str,
+    ) -> Result<HiWriteHook, PluginErrorCodes> {
         plugin.get_hook(hook)
     }
 
@@ -57,9 +57,14 @@ impl Manager {
     pub fn begin_plugin(&mut self, plugin: &mut Plugin) -> Result<(), PluginErrorCodes> {
         let plugin_entry: Symbol<unsafe extern "C" fn() -> i32>;
         unsafe {
-            plugin_entry = match plugin.raw.as_ref().unwrap().get(self.entry_point.as_bytes()) {
+            plugin_entry = match plugin
+                .raw
+                .as_ref()
+                .unwrap()
+                .get(self.entry_point.as_bytes())
+            {
                 Ok(fnc) => fnc,
-                Err(e) => {
+                Err(_) => {
                     return Err(PluginErrorCodes::FailedToInitialize);
                 }
             };
@@ -93,11 +98,8 @@ impl Drop for Manager {
         let plug_dir = env::temp_dir().join("hiwrite_plugin");
         for plug in &mut self.injected_plugin {
             plug.terminate().unwrap_or_else(|e| {
-                log::warn!(
-                    "Couldn't unload hiwrite_plugin: {}",
-                    e.to_string()
-                )});
-            drop(plug);
+                log::warn!("Couldn't unload hiwrite_plugin: {}", e.to_string())
+            });
         }
         match std::fs::remove_dir_all(&plug_dir) {
             Ok(()) => log::trace!("Removed directory: {}", plug_dir.display()),

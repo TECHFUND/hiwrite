@@ -1,4 +1,3 @@
-extern crate thiserror;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

@@ -1,11 +1,13 @@
-use std::ffi::OsStr;
-use std::{env, fs};
-use std::io::ErrorKind;
-use std::io::ErrorKind::{Interrupted, NotFound, Other, OutOfMemory, PermissionDenied, UnexpectedEof, Unsupported};
 use crate::plugin::error::PluginErrorCodes;
-use crate::plugin::{HiWriteHook, Plugin};
 use crate::plugin::metadata::PluginMetadata;
+use crate::plugin::{HiWriteHook, Plugin};
 use libloading::{Library, Symbol};
+use std::ffi::OsStr;
+use std::io::ErrorKind;
+use std::io::ErrorKind::{
+    Interrupted, NotFound, Other, OutOfMemory, PermissionDenied, UnexpectedEof, Unsupported,
+};
+use std::{env, fs};
 
 macro_rules! initialize_later {
     () => {
@@ -19,7 +21,6 @@ macro_rules! init_now {
     };
 }
 
-
 impl Plugin {
     fn load_archive<S: Copy + Into<String> + AsRef<OsStr>>(
         filename: S,
@@ -28,30 +29,28 @@ impl Plugin {
         let fname = std::path::Path::new(&tmp);
         let file = match fs::File::open(fname) {
             Ok(val) => val,
-            Err(e) => {
-                match e.kind() {
-                    PermissionDenied => return Err(PluginErrorCodes::PermissionDenied),
-                    Unsupported => {
-                        return Err(PluginErrorCodes::InternalError {
-                            err: "Unsupported file".into(),
-                        })
-                    }
-                    NotFound => return Err(PluginErrorCodes::NoSuchFile),
-                    Interrupted => return Err(PluginErrorCodes::InvalidPlugin),
-                    UnexpectedEof => return Err(PluginErrorCodes::InvalidPlugin),
-                    OutOfMemory => {
-                        return Err(PluginErrorCodes::InternalError {
-                            err: "Host is out of memory".into(),
-                        })
-                    }
-                    Other => {
-                        return Err(PluginErrorCodes::InternalError {
-                            err: "Unknown error.".into(),
-                        })
-                    }
-                    _ => panic!(),
+            Err(e) => match e.kind() {
+                PermissionDenied => return Err(PluginErrorCodes::PermissionDenied),
+                Unsupported => {
+                    return Err(PluginErrorCodes::InternalError {
+                        err: "Unsupported file".into(),
+                    });
                 }
-            }
+                NotFound => return Err(PluginErrorCodes::NoSuchFile),
+                Interrupted => return Err(PluginErrorCodes::InvalidPlugin),
+                UnexpectedEof => return Err(PluginErrorCodes::InvalidPlugin),
+                OutOfMemory => {
+                    return Err(PluginErrorCodes::InternalError {
+                        err: "Host is out of memory".into(),
+                    });
+                }
+                Other => {
+                    return Err(PluginErrorCodes::InternalError {
+                        err: "Unknown error.".into(),
+                    });
+                }
+                _ => panic!(),
+            },
         };
 
         match std::fs::create_dir(env::temp_dir().join("hiwrite_plugin")) {
@@ -123,7 +122,10 @@ impl Plugin {
         Ok(plugin)
     }
 
-    pub(in crate::plugin) fn load_vhook(&self, fn_name: &str) -> Result<HiWriteHook, PluginErrorCodes> {
+    pub(in crate::plugin) fn load_vhook(
+        &self,
+        fn_name: &str,
+    ) -> Result<HiWriteHook, PluginErrorCodes> {
         if !self.started || !self.is_valid || self.raw.is_none() {
             return Err(PluginErrorCodes::InvalidPlugin);
         }
@@ -209,7 +211,12 @@ impl Plugin {
 
         let destructor: Symbol<unsafe extern "C" fn() -> ()>;
         unsafe {
-            destructor = match self.raw.as_ref().unwrap_unchecked().get(b"hiwrite_plugin_exit\0") {
+            destructor = match self
+                .raw
+                .as_ref()
+                .unwrap_unchecked()
+                .get(b"hiwrite_plugin_exit\0")
+            {
                 Ok(v) => v,
                 Err(_) => {
                     return Err(PluginErrorCodes::InvalidPlugin);

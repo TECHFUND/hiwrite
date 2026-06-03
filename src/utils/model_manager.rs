@@ -1,8 +1,8 @@
 use actix_web::web;
 use diesel::{
+    PgConnection,
     query_builder::AsChangeset,
     r2d2::{ConnectionManager, Pool, PoolError, PooledConnection},
-    PgConnection,
 };
 
 use crate::utils::error::HttpErrorCodes;
@@ -13,25 +13,27 @@ pub type PGPool = Pool<ConnectionManager<PgConnection>>;
 pub type PGPooledConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
 pub trait Model<TQueryable, TMutable: AsChangeset, TPrimary, TDto = TQueryable> {
-    fn create(new: &TMutable, db: &PgConnection) -> Result<usize, diesel::result::Error>;
-    fn read_one(id: TPrimary, db: &PgConnection) -> Result<TDto, diesel::result::Error>;
-    fn read_all(db: &PgConnection) -> Result<Vec<TDto>, diesel::result::Error>;
+    fn create(new: &TMutable, db: &mut PgConnection) -> Result<usize, diesel::result::Error>;
+    fn read_one(id: TPrimary, db: &mut PgConnection) -> Result<TDto, diesel::result::Error>;
+    fn read_all(db: &mut PgConnection) -> Result<Vec<TDto>, diesel::result::Error>;
     fn update(
         id: TPrimary,
         new: &TMutable,
-        db: &PgConnection,
+        db: &mut PgConnection,
     ) -> Result<usize, diesel::result::Error>;
-    fn delete(id: TPrimary, db: &PgConnection) -> Result<usize, diesel::result::Error>;
+    fn delete(id: TPrimary, db: &mut PgConnection) -> Result<usize, diesel::result::Error>;
 }
 
+#[allow(dead_code)]
 pub trait DTO<TColumns> {
     fn columns() -> TColumns;
 }
 
+#[allow(dead_code)]
 pub trait Joinable<TLeft, TRight, TPrimary> {
     fn read_one_join_on(
         id: TPrimary,
-        db: &PgConnection,
+        db: &mut PgConnection,
     ) -> Result<(TLeft, Vec<TRight>), diesel::result::Error>;
 }
 

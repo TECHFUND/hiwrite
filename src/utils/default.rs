@@ -1,7 +1,7 @@
 use actix_web::web::Data;
 use handlebars::{
-    to_json, Context, Handlebars, Helper, HelperDef, JsonRender, Output, RenderContext,
-    RenderError, ScopedJson,
+    Context, Handlebars, Helper, HelperDef, JsonRender, Output, RenderContext, RenderError,
+    ScopedJson, to_json,
 };
 use std::sync::Mutex;
 

@@ -1,12 +1,12 @@
 use actix_cors::Cors;
 use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};
 use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use diesel::Connection;
 use diesel::PgConnection;
-use diesel_migrations::run_pending_migrations;
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenv::dotenv;
-use envy;
+use env_logger::Env;
 use handlebars::Handlebars;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -14,10 +14,10 @@ use std::time::Duration;
 mod category;
 mod module;
 mod page;
+mod plugin;
 mod schema;
 mod user;
 mod utils;
-mod plugin;
 
 use crate::page::controller::display::display_page;
 use crate::user::router::UserRouter;
@@ -28,14 +28,10 @@ use module::router::ModuleRouter;
 use page::router::PageRouter;
 use utils::structs::LocalConfig;
 
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_migrations;
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    embed_migrations!();
     if cfg!(debug_assertions) {
         dotenv().unwrap();
     }
@@ -43,15 +39,14 @@ async fn main() -> std::io::Result<()> {
     let conf = envy::prefixed("app_").from_env::<LocalConfig>().unwrap();
     let pool = establish_database_connection(conf.clone()).unwrap();
 
-    match run_pending_migrations(
-        &PgConnection::establish(&format_connection_string(conf.clone())).unwrap(),
-    ) {
+    let mut migration_connection =
+        PgConnection::establish(&format_connection_string(conf.clone())).unwrap();
+    match migration_connection.run_pending_migrations(MIGRATIONS) {
         Ok(_) => println!("Ran migrations."),
         Err(_) => println!("Migrations not ran."),
     };
 
-    std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("actix_web=info")).init();
 
     let handlebars = Handlebars::new();
 
