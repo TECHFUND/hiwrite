@@ -1,18 +1,10 @@
 #![allow(dead_code)]
 
-extern crate libloading;
-extern crate log;
-
-use libloading::{Library, Symbol};
-use serde::Deserialize;
-use std::env::{self};
-use std::ffi::OsStr;
-use std::fs::{self, File};
-use std::io::ErrorKind::{self, *};
-use zip::ZipArchive;
-use crate::plugin::error::PluginErrorCodes;
 use crate::plugin::metadata::PluginMetadata;
-use crate::plugin::HiWriteHook;
+use libloading::Library;
+use serde::Deserialize;
+use std::fs::File;
+use zip::ZipArchive;
 
 type LaterInitialized<T> = Option<T>;
 

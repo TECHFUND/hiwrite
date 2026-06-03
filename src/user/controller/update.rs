@@ -1,15 +1,15 @@
 use crate::user::model::MutUser;
 use crate::user::model::User;
+use crate::utils::auth::Claims;
 use crate::utils::auth::encrypt;
 use crate::utils::auth::encrypt_password;
-use crate::utils::auth::Claims;
 use crate::utils::error::HttpErrorCodes;
-use crate::utils::model_manager::pool_handler;
 use crate::utils::model_manager::Model;
 use crate::utils::model_manager::PGPool;
+use crate::utils::model_manager::pool_handler;
+use actix_web::HttpResponse;
 use actix_web::cookie::Cookie;
 use actix_web::web;
-use actix_web::HttpResponse;
 use time::Duration;
 use time::OffsetDateTime;
 
@@ -20,7 +20,7 @@ pub async fn update_user(
     claim: Claims,
 ) -> Result<HttpResponse, HttpErrorCodes> {
     // Postgres pool handler
-    let postgres_pool = pool_handler(pool)?;
+    let mut postgres_pool = pool_handler(pool)?;
 
     // Update user
     let mut salted_user = new.clone();
@@ -48,7 +48,7 @@ pub async fn update_user(
     salted_user.token = Some(token_enc);
 
     // Update user in database
-    User::update(id.clone(), &salted_user, &postgres_pool)?;
+    User::update(id.clone(), &salted_user, &mut postgres_pool)?;
 
     // Return updated user
     Ok(user)

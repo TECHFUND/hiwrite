@@ -2,11 +2,11 @@ use super::login_res::login_res;
 use crate::user::model::MutUser;
 use crate::user::model::User;
 use crate::utils::error::HttpErrorCodes;
-use crate::utils::model_manager::pool_handler;
 use crate::utils::model_manager::Model;
 use crate::utils::model_manager::PGPool;
-use actix_web::web;
+use crate::utils::model_manager::pool_handler;
 use actix_web::HttpResponse;
+use actix_web::web;
 use argon2::Argon2;
 use argon2::PasswordHash;
 use argon2::PasswordVerifier;
@@ -16,11 +16,11 @@ pub async fn login(
     pool: web::Data<PGPool>,
 ) -> Result<HttpResponse, HttpErrorCodes> {
     // Postgres pool handler
-    let postgres_pool = pool_handler(pool)?;
+    let mut postgres_pool = pool_handler(pool)?;
     let arg = Argon2::default();
 
     // Get user
-    let read_user = User::read_one(user.username.clone(), &postgres_pool)?;
+    let read_user = User::read_one(user.username.clone(), &mut postgres_pool)?;
     // I set the password "root" when signup
     let is_default = read_user.username == "root" && read_user.password == "root";
     if read_user.token.is_some() && is_default {
@@ -31,10 +31,9 @@ pub async fn login(
     if is_default {
         let mut new_user = user.clone();
         let cookie = login_res(&mut new_user)?;
-        let cookie_response = HttpResponse::Accepted().cookie(cookie.clone()).finish();
         new_user.token = Some(cookie.value().to_string());
-        User::update_with_token(&new_user, &postgres_pool)?;
-        let read_user = User::read_one(new_user.username.clone(), &postgres_pool)?;
+        User::update_with_token(&new_user, &mut postgres_pool)?;
+        let read_user = User::read_one(new_user.username.clone(), &mut postgres_pool)?;
         return Ok(HttpResponse::Ok().json(read_user));
     }
 
@@ -49,10 +48,9 @@ pub async fn login(
         Ok(_) => {
             let mut new_user = user;
             let cookie = login_res(&mut new_user)?;
-            let cookie_response = HttpResponse::Ok().cookie(cookie.clone()).finish();
             new_user.token = Some(cookie.value().to_string());
-            User::update_with_token(&new_user, &postgres_pool)?;
-            let read_user = User::read_one(new_user.username.clone(), &postgres_pool)?;
+            User::update_with_token(&new_user, &mut postgres_pool)?;
+            let read_user = User::read_one(new_user.username.clone(), &mut postgres_pool)?;
             Ok(HttpResponse::Ok().json(read_user))
         }
         _ => Ok(HttpResponse::Unauthorized().json("Failed to authenticate.")),

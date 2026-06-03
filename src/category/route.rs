@@ -1,6 +1,6 @@
 use super::controller::{create::*, delete::*, get::*, update::*};
 use crate::utils::structs::Router;
-use actix_web::{web, Scope};
+use actix_web::{Scope, web};
 
 pub struct CategoryRouter;
 

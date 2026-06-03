@@ -1,15 +1,15 @@
-use actix_web::{dev::Payload, http::HeaderValue, web, FromRequest, HttpRequest};
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use actix_web::{FromRequest, HttpRequest, dev::Payload, http::HeaderValue, web};
+use argon2::{Argon2, PasswordHasher, password_hash::SaltString};
 use diesel::PgConnection;
-use futures::{future::LocalBoxFuture, Future};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use futures::{Future, future::LocalBoxFuture};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::error::HttpErrorCodes;
 use crate::user::model::{self, User};
-use crate::utils::model_manager::{pool_handler, Model, PGPool};
+use crate::utils::model_manager::{Model, PGPool, pool_handler};
 
 #[derive(Error, Debug)]
 pub enum ErrorCodes {
@@ -74,9 +74,13 @@ pub fn decrypt(jwt: &String) -> Result<Claims, ErrorCodes> {
     Ok(decoded_token.claims)
 }
 
-pub fn compare(token: &Claims, enc_token: &String, pool: &PgConnection) -> Result<User, ErrorCodes> {
+pub fn compare(
+    token: &Claims,
+    enc_token: &String,
+    pool: &mut PgConnection,
+) -> Result<User, ErrorCodes> {
     // Read user from database and compare token
-    if let Ok(user) = model::User::read_one(token.sub.clone(), &pool) {
+    if let Ok(user) = model::User::read_one(token.sub.clone(), pool) {
         if user.token.is_none() {
             return Err(ErrorCodes::NotLoggedIn);
         }
@@ -113,12 +117,12 @@ impl FromRequest for Claims {
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         let pool = req.app_data::<web::Data<PGPool>>().unwrap().to_owned();
-        let postgres_pool = pool_handler(pool).unwrap();
+        let mut postgres_pool = pool_handler(pool).unwrap();
         let auth_header = req.headers().get("Authorization");
 
         match auth_header {
             Some(auth) => {
-                let fut = authenticate(auth, &postgres_pool);
+                let fut = authenticate(auth, &mut postgres_pool);
                 Box::pin(fut)
             }
             _ => Box::pin(async { Err(ErrorCodes::NoAuthHeader.into()) }),
@@ -128,8 +132,8 @@ impl FromRequest for Claims {
 
 pub fn authenticate(
     auth_header: &HeaderValue,
-    db: &PgConnection,
-) -> impl Future<Output = Result<Claims, HttpErrorCodes>> {
+    db: &mut PgConnection,
+) -> impl Future<Output = Result<Claims, HttpErrorCodes>> + use<> {
     // Decrypt token and compare with database
     let encrypted_token = std::str::from_utf8(auth_header.as_bytes())
         .unwrap()
@@ -146,9 +150,7 @@ pub fn authenticate(
     // Return decrypted token if logged in
     async move {
         match logged_in {
-            Ok(_) => {
-                Ok(decrypted_token?)
-            },
+            Ok(_) => Ok(decrypted_token?),
             Err(e) => Err(e.into()),
         }
     }

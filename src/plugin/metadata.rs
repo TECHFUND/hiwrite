@@ -1,8 +1,7 @@
-use std::fs;
-use std::fs::File;
-use serde::Deserialize;
 use crate::plugin::error::PluginErrorCodes;
 use crate::plugin::{Data, Plugin};
+use serde::Deserialize;
+use std::fs;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -36,14 +35,13 @@ impl PluginMetadata {
             objfile: String::new(),
         };
 
-        let contents = fs::read_to_string("metadata.toml")
-            .map_err(|e| {
-                log::error!("Couldn't read metadata file: {}", e.to_string());
-                PluginErrorCodes::ParametersError
-            });
+        let contents = fs::read_to_string("metadata.toml").map_err(|e| {
+            log::error!("Couldn't read metadata file: {}", e.to_string());
+            PluginErrorCodes::ParametersError
+        });
         let buffer = String::from(contents.unwrap());
 
-        let data_raw : Data = match toml::from_str(&buffer) {
+        let data_raw: Data = match toml::from_str(&buffer) {
             Ok(ok) => ok,
             Err(_) => return Err(PluginErrorCodes::ParametersError),
         };

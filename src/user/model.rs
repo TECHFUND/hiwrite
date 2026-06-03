@@ -6,8 +6,8 @@ use crate::schema::users;
 
 // User model and its mutations
 #[derive(Queryable, Identifiable, Debug, Clone, Serialize, Deserialize)]
-#[primary_key("uuid")]
-#[table_name = "users"]
+#[diesel(primary_key(uuid))]
+#[diesel(table_name = users)]
 pub struct User {
     pub uuid: String,
     pub username: String,
@@ -16,7 +16,7 @@ pub struct User {
 }
 
 #[derive(Debug, AsChangeset, Insertable, Clone, Serialize, Deserialize)]
-#[table_name = "users"]
+#[diesel(table_name = users)]
 pub struct MutUser {
     pub uuid: Option<String>,
     pub username: String,
@@ -26,19 +26,22 @@ pub struct MutUser {
 
 impl Model<User, MutUser, String> for User {
     // Create a new user
-    fn create(new: &MutUser, db: &diesel::PgConnection) -> Result<usize, diesel::result::Error> {
+    fn create(
+        new: &MutUser,
+        db: &mut diesel::PgConnection,
+    ) -> Result<usize, diesel::result::Error> {
         diesel::insert_into(users::table).values(new).execute(db)
     }
 
     // Read a user by username
-    fn read_one(id: String, db: &diesel::PgConnection) -> Result<User, diesel::result::Error> {
+    fn read_one(id: String, db: &mut diesel::PgConnection) -> Result<User, diesel::result::Error> {
         use users::dsl::username;
 
         Ok(users::table.filter(username.eq(id)).first::<User>(db)?)
     }
 
     // Read all users
-    fn read_all(_: &diesel::PgConnection) -> Result<Vec<User>, diesel::result::Error> {
+    fn read_all(_: &mut diesel::PgConnection) -> Result<Vec<User>, diesel::result::Error> {
         unimplemented!()
     }
 
@@ -46,7 +49,7 @@ impl Model<User, MutUser, String> for User {
     fn update(
         id: String,
         new: &MutUser,
-        db: &diesel::PgConnection,
+        db: &mut diesel::PgConnection,
     ) -> Result<usize, diesel::result::Error> {
         use users::dsl::username;
         let update = diesel::update(users::table.filter(username.eq(id)))
@@ -57,7 +60,7 @@ impl Model<User, MutUser, String> for User {
     }
 
     // Delete a user by username
-    fn delete(_: String, _: &diesel::PgConnection) -> Result<usize, diesel::result::Error> {
+    fn delete(_: String, _: &mut diesel::PgConnection) -> Result<usize, diesel::result::Error> {
         todo!()
     }
 }
@@ -67,7 +70,7 @@ impl User {
 
     pub fn update_with_token(
         new: &MutUser,
-        db: &diesel::PgConnection,
+        db: &mut diesel::PgConnection,
     ) -> Result<usize, diesel::result::Error> {
         use users::dsl::username;
 

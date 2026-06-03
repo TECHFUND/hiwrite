@@ -1,5 +1,5 @@
 use super::controller::{create::*, delete::*, get::*, get_all::*, get_mod::*, update::*};
-use actix_web::{web, Scope};
+use actix_web::{Scope, web};
 pub struct PageRouter;
 
 impl PageRouter {
